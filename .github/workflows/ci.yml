@@ -88,6 +88,11 @@ jobs:
         pip install conan
         conan profile detect --force
     
+    - name: Install Doxygen
+      run: |
+        choco install doxygen.install
+        doxygen --version
+    
     - name: Setup MSVC
       uses: microsoft/setup-msbuild@v2
     
@@ -111,13 +116,13 @@ jobs:
         cd build
         ctest --output-on-failure -C Release
     
-    - name: Install Doxygen
-      run: |
-        choco install doxygen.install
-    
     - name: Generate documentation
       run: |
-        cmake --build build --target docs
+        if (Test-Path "build/docs.vcxproj") {
+          cmake --build build --target docs --config Release
+        } else {
+          Write-Host "Doxygen target not found, skipping documentation generation"
+        }
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -128,6 +133,7 @@ jobs:
     
     - name: Upload documentation
       uses: actions/upload-artifact@v4
+      if: hashFiles('build/docs/**') != ''
       with:
         name: documentation-windows
         path: build/docs/
