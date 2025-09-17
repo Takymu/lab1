@@ -88,14 +88,6 @@ jobs:
         pip install conan
         conan profile detect --force
     
-    - name: Install Ninja
-      run: |
-        choco install ninja
-    
-    - name: Install Doxygen
-      run: |
-        choco install doxygen.install
-    
     - name: Setup MSVC
       uses: microsoft/setup-msbuild@v2
     
@@ -108,16 +100,20 @@ jobs:
     
     - name: Configure CMake
       run: |
-        cmake -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+        cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
     
     - name: Build project
       run: |
-        cmake --build build
+        cmake --build build --config Release
     
     - name: Run tests
       run: |
         cd build
-        ctest --output-on-failure
+        ctest --output-on-failure -C Release
+    
+    - name: Install Doxygen
+      run: |
+        choco install doxygen.install
     
     - name: Generate documentation
       run: |
