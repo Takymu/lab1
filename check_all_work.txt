@@ -1,0 +1,37 @@
+сборка
+
+conan install . --output-folder=build --build=missing
+
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+
+cmake --build build
+
+
+проверка
+
+./build/compressor/compressor zlib "test_string"
+
+./build/compressor/compressor bzip "test_string"
+
+./build/libcompressor/tests/libcompressortest
+
+cmake --build build --target docs
+
+cmake --install build --prefix ./install_test
+
+find . -name "*.cpp" -o -name "*.hpp" | grep -v build | xargs clang-format --dry-run --Werror
+
+clang-tidy libcompressor/src/libcompressor.cpp -p build/
+
+
+на винде еще
+
+git init
+git add .
+git commit -m
+
+Затем создай репозиторий на GitHub через веб-интерфейс и подключи его:
+
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+git branch -M main
+git push -u origin main

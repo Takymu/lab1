@@ -1,0 +1,137 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake ninja-build doxygen clang-tidy clang-format
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Conan
+      run: |
+        pip install conan
+        conan profile detect --force
+    
+    - name: Install dependencies
+      run: |
+        conan install . --output-folder=build --build=missing --settings=build_type=Release
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build project
+      run: |
+        cmake --build build
+    
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure
+    
+    - name: Check code formatting
+      run: |
+        find . -name "*.cpp" -o -name "*.hpp" | grep -v build | xargs clang-format --dry-run --Werror
+    
+    - name: Run static analysis
+      run: |
+        clang-tidy libcompressor/src/libcompressor.cpp -p build/
+    
+    - name: Generate documentation
+      run: |
+        cmake --build build --target docs
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-linux
+        path: build/test_results.xml
+    
+    - name: Upload documentation
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation-linux
+        path: build/docs/
+
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Conan
+      run: |
+        pip install conan
+        conan profile detect --force
+    
+    - name: Install Ninja
+      run: |
+        choco install ninja
+    
+    - name: Install Doxygen
+      run: |
+        choco install doxygen.install
+    
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+    
+    - name: Setup Developer Command Prompt
+      uses: ilammy/msvc-dev-cmd@v1
+    
+    - name: Install dependencies
+      run: |
+        conan install . --output-folder=build --build=missing --settings=build_type=Release
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build project
+      run: |
+        cmake --build build
+    
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure
+    
+    - name: Generate documentation
+      run: |
+        cmake --build build --target docs
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-windows
+        path: build/test_results.xml
+    
+    - name: Upload documentation
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation-windows
+        path: build/docs/
