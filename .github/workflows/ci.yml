@@ -91,7 +91,6 @@ jobs:
     - name: Install Doxygen
       run: |
         choco install doxygen.install -y
-        # Обновляем переменные окружения в текущей сессии
         $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
         doxygen --version
     
@@ -120,13 +119,8 @@ jobs:
     
     - name: Generate documentation
       run: |
-        # Обновляем PATH перед генерацией документации
         $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
-        if (Test-Path "build/docs.vcxproj") {
-          cmake --build build --target docs --config Release
-        } else {
-          Write-Host "Doxygen target not found, skipping documentation generation"
-        }
+        cmake --build build --target docs --config Release
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
