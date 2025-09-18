@@ -90,7 +90,7 @@ jobs:
     
     - name: Install Doxygen
       run: |
-        choco install doxygen.install
+        choco install doxygen.install -y
         doxygen --version
     
     - name: Setup MSVC
