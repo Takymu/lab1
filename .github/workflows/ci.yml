@@ -91,6 +91,8 @@ jobs:
     - name: Install Doxygen
       run: |
         choco install doxygen.install -y
+        # Обновляем переменные окружения в текущей сессии
+        $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
         doxygen --version
     
     - name: Setup MSVC
@@ -118,6 +120,8 @@ jobs:
     
     - name: Generate documentation
       run: |
+        # Обновляем PATH перед генерацией документации
+        $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
         if (Test-Path "build/docs.vcxproj") {
           cmake --build build --target docs --config Release
         } else {
